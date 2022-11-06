@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springbootappv1-deployment
+  labels:
+    app: springbootappv1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springbootappv1
+  template:
+    metadata:
+      labels:
+        app: springbootappv1
+    spec:
+     containers:
+     - image: 080266302756.dkr.ecr.us-west-2.amazonaws.com/springbootappv1
+       name: springbootappv1
+       ports:
+       - containerPort: 8080
+       resources:
+          requests:
+             memory: "128Mi"
+             cpu: "100m"
+          limits:
+            memory: "500Mi"
+            cpu: "200m"
+            
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: springbootappv1-service
+ # annotations: 
+ #  external-dns.alpha.kubernetes.io/hostname: ekslab.abdelalitraining.com
+spec:
+  type: NodePort
+
+ # type: LoadBalancer
+  selector:
+    app: springbootappv1
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30007
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springbootappv2-deployment
+  labels:
+    app: springbootappv2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springbootappv2
+  template:
+    metadata:
+      labels:
+        app: springbootappv2
+    spec:
+     containers:
+     - image: 080266302756.dkr.ecr.us-west-2.amazonaws.com/springbootappv2
+       name: springbootappv2
+       ports:
+       - containerPort: 8080
+
+---
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: springbootappv2-service
+ # annotations: 
+ #  external-dns.alpha.kubernetes.io/hostname: ekslab.abdelalitraining.com
+spec:
+  type: NodePort
+
+ # type: LoadBalancer
+  selector:
+    app: springbootappv2
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30008

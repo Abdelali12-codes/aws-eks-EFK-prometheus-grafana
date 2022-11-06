@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: kube-logging
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:7.2.0
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        env:
+          - name: ELASTICSEARCH_URL
+            value: http://elasticsearch:9200
+        ports:
+        - containerPort: 5601
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: kube-logging
+  labels:
+    app: kibana
+spec:
+  ports:
+  - port: 5601
+    targetPort: 5601
+  selector:
+    app: kibana
+    
+    
+--- 
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-nginx-conf
+  namespace: default
+data:
+  kibana.conf: |
+    upstream kibana {
+     server kibana.kube-logging.svc.cluster.local:5601;
+    }
+    server{ 
+      listen 5601;
+      location / {
+        proxy_pass http://kibana;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+      }
+    }
+    
+  #nginx.conf: |
+  #  server{ 
+  #    listen 5000;
+  #    root /var/www/html;
+  #    location / {
+  #       index index.html;
+  #    }
+  #  }
+  #index.html: |
+  #  <h1> Welcome To Nginx </h1>
+  #  <h2> <a href="/grafana">Grafana</a> </h2>
+   
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana-nginx-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana-nginx
+        image: nginx
+        ports:
+        - containerPort: 5601
+        volumeMounts:
+          - name: kibanaconfig
+            mountPath: /etc/nginx/conf.d 
+            readOnly: true
+            
+      volumes:
+          - name: kibanaconfig
+            configMap:
+              name: kibana-nginx-conf
+              items:
+              - key: kibana.conf 
+                path: kibana.conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: default
+  labels:
+    app: kibana
+spec:
+  type: ClusterIP
+  selector:
+    app: kibana
+  ports:
+    - name: grafana
+      protocol: TCP
+      port: 5601
+      targetPort: 5601
+    

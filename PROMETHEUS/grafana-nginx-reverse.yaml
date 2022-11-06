@@ -1,0 +1,84 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: default
+data:
+  grafana.conf: |
+    upstream grafana {
+     server prometheus-chart-grafana.monitoring.svc.cluster.local:80;
+    }
+    server{ 
+      listen 3000;
+      location / {
+        proxy_pass http://grafana;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+      }
+    }
+    
+  #nginx.conf: |
+  #  server{ 
+  #    listen 5000;
+  #    root /var/www/html;
+  #    location / {
+  #       index index.html;
+  #    }
+  #  }
+  #index.html: |
+  #  <h1> Welcome To Nginx </h1>
+  #  <h2> <a href="/grafana">Grafana</a> </h2>
+   
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-nginx-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana-nginx
+        image: nginx
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+          - name: grafanaconfig
+            mountPath: /etc/nginx/conf.d 
+            readOnly: true
+            
+      volumes:
+          - name: grafanaconfig
+            configMap:
+              name: nginx-conf
+              items:
+              - key: grafana.conf 
+                path: grafana.conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - name: grafana
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+    
