@@ -1,14 +1,14 @@
-# install autoscaler ()
-# install metrics server 
+### install autoscaler ()
+###  install metrics server 
 
-# install the ebs csi driver (helm chart)
-# install the efs csi driver (helm chart)
+###  install the ebs csi driver (helm chart)
+###  install the efs csi driver (helm chart)
 
-# install the prometheus and grafana (helm chart)
-# install EFK stack 
+###  install the prometheus and grafana (helm chart)
+###  install EFK stack 
 
-# install appmesh controller (helm chart)
+###  install appmesh controller (helm chart)
 
-# install external dns service 
+###  install external dns service 
 
-# install the ingress (helm chart )
+###  install the ingress (helm chart )
