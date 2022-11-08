@@ -1,4 +1,4 @@
-## order to install the Manifests
+## order to install the Manifest
 ### install autoscaler ()
 ###  install metrics server 
 
